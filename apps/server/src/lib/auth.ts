@@ -30,6 +30,7 @@ export const auth = betterAuth({
       sameSite: 'none',
       secure: true,
       httpOnly: true,
+      partitioned: true,
     },
   },
   plugins: [validator([{ path: '/sign-up/email', schema: SignupSchema }])],
