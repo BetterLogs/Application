@@ -21,7 +21,12 @@
       "!**/.source"
     ]
   },
-  "extends": [
-    "ultracite"
-  ]
+  "extends": ["ultracite"],
+  "linter": {
+    "rules": {
+      "performance": {
+        "noNamespaceImport": "warn"
+      }
+    }
+  }
 }
