@@ -31,7 +31,7 @@ export default function UserMenu({ user }: { user: User }) {
               alt="Profile image"
               src={user.image ? user.image : './avatar.jpg'}
             />
-            <AvatarFallback>KK</AvatarFallback>
+            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

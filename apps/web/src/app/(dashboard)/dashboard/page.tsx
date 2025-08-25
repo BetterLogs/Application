@@ -1,10 +1,10 @@
-import { Button } from '@/components/ui/button';
+import CreateTeamModal from './_components/create-team';
 export default function Dashboard() {
   return (
     <main aria-labelledby="dashboard-heading">
       <section
         aria-describedby="empty-description"
-        className="mt-6 flex flex-col items-center justify-center gap-6 rounded-lg border border-dashed p-8"
+        className="mx-4 mt-6 flex flex-col items-center justify-center gap-6 rounded-lg border border-dashed p-8"
       >
         <div className="text-center">
           <h2 className="font-bold font-mono text-xl">Create your team</h2>
@@ -13,9 +13,8 @@ export default function Dashboard() {
             You can invite members, assign roles, and configure settings.
           </p>
         </div>
-
         <div className="flex gap-3">
-          <Button>Create a team</Button>
+          <CreateTeamModal />
         </div>
       </section>
     </main>
