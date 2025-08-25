@@ -1,9 +1,9 @@
 {
   "name": "server",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsdown",
+  "build": "tsc -p tsconfig.json --outDir ./dist",
     "check-types": "tsc -b",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "bun run --hot src/index.ts",
