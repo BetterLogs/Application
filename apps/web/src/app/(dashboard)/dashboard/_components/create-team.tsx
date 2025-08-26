@@ -12,7 +12,49 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { CreateOrgSchema } from '../../../../../../server/src/lib/validation/orgs';
 import { createOrganization, validateSlug } from './helpers/orgs';
+import OrganizationImage from './team-image';
+
+function getFieldErrors(result: ReturnType<typeof CreateOrgSchema.safeParse>) {
+  const fieldErrors: { name?: string; slug?: string } = {};
+  if (Array.isArray(result.error?.issues)) {
+    for (const err of result.error.issues) {
+      if (err.path[0] === 'name') {
+        fieldErrors.name = err.message;
+      }
+      if (err.path[0] === 'slug') {
+        fieldErrors.slug = err.message;
+      }
+    }
+  }
+  return fieldErrors;
+}
+
+async function tryCreateOrganization({
+  name,
+  slug,
+  logo,
+}: {
+  name: string;
+  slug: string;
+  logo: string;
+}) {
+  const slugErrorMsg = await validateSlug(slug);
+  if (slugErrorMsg) {
+    toast.error(slugErrorMsg);
+    return false;
+  }
+
+  const createErrorMsg = await createOrganization({ name, slug, logo });
+  if (createErrorMsg) {
+    toast.error(createErrorMsg);
+    return false;
+  }
+
+  toast.success('Organization created');
+  return true;
+}
 
 export default function CreateOrganizationModal() {
   const [organizationName, setOrganizationName] = useState('');
@@ -22,6 +64,8 @@ export default function CreateOrganizationModal() {
 
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const [errors, setErrors] = useState<{ name?: string; slug?: string }>({});
 
   useEffect(() => {
     if (manualSlug) {
@@ -39,32 +83,35 @@ export default function CreateOrganizationModal() {
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      setOpen(false);
       setLoading(true);
 
-      try {
-        const slugErrorMsg = await validateSlug(organizationSlug);
-        if (slugErrorMsg) {
-          toast.error(slugErrorMsg);
-          return;
-        }
+      const result = CreateOrgSchema.safeParse({
+        name: organizationName,
+        slug: organizationSlug,
+        logo: organizationLogo,
+      });
 
-        const createErrorMsg = await createOrganization({
+      if (!result.success) {
+        setErrors(getFieldErrors(result));
+        setLoading(false);
+        return;
+      }
+      setErrors({});
+
+      try {
+        const created = await tryCreateOrganization({
           name: organizationName,
           slug: organizationSlug,
           logo: organizationLogo,
         });
 
-        if (createErrorMsg) {
-          toast.error(createErrorMsg);
-          return;
+        if (created) {
+          setOrganizationName('');
+          setOrganizationSlug('');
+          setOrganizationLogo('');
+          setManualSlug(false);
+          setOpen(false);
         }
-
-        toast.success('Organization created');
-        setOrganizationName('');
-        setOrganizationSlug('');
-        setOrganizationLogo('');
-        setManualSlug(false);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         toast.error(message);
@@ -82,26 +129,7 @@ export default function CreateOrganizationModal() {
       </DialogTrigger>
       <DialogContent>
         <div className="flex flex-col items-center gap-2">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-full border">
-            <svg
-              className="stroke-zinc-800 dark:stroke-zinc-100"
-              height="20"
-              role="img"
-              viewBox="0 0 24 24"
-              width="20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <title>Organization icon</title>
-              <path
-                d="M16 14v6m-4-6v6m-4-6v6M6 10h12l-1-7H7l-1 7Z"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-            </svg>
-          </div>
+          <OrganizationImage />
           <DialogHeader>
             <DialogTitle className="sm:text-center">
               Create a new Organization
@@ -112,24 +140,37 @@ export default function CreateOrganizationModal() {
           </DialogHeader>
         </div>
 
-        <form className="space-y-5" onSubmit={handleSubmit}>
+        <form className="space-y-5" noValidate onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor={'name'}>Organization name</Label>
+              <Label htmlFor="name">Organization name</Label>
               <Input
-                id={'name'}
+                aria-describedby={errors.name ? 'org-name-error' : undefined}
+                aria-invalid={!!errors.name}
+                id="name"
+                maxLength={21}
+                minLength={2}
                 onChange={(e) => setOrganizationName(e.target.value)}
                 placeholder="My awesome organization"
                 required
                 type="text"
                 value={organizationName}
               />
+              {errors.name && (
+                <p className="text-destructive text-sm" id="org-name-error">
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={'slug'}>Organization slug</Label>
+              <Label htmlFor="slug">Organization slug</Label>
               <Input
-                id={'slug'}
+                aria-describedby={errors.slug ? 'org-slug-error' : undefined}
+                aria-invalid={!!errors.slug}
+                id="slug"
+                maxLength={21}
+                minLength={2}
                 onChange={(e) => {
                   setOrganizationSlug(e.target.value);
                   setManualSlug(true);
@@ -139,23 +180,14 @@ export default function CreateOrganizationModal() {
                 type="text"
                 value={organizationSlug}
               />
+              {errors.slug && (
+                <p className="text-destructive text-sm" id="org-slug-error">
+                  {errors.slug}
+                </p>
+              )}
               <p className="text-muted-foreground text-sm">
-                Used in your Organization's URL. Generated automatically from
-                the name.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={'logo'}>Organization logo (URL)</Label>
-              <Input
-                id={'logo'}
-                onChange={(e) => setOrganizationLogo(e.target.value)}
-                placeholder="https://example.com/logo.png"
-                type="url"
-                value={organizationLogo}
-              />
-              <p className="text-muted-foreground text-sm">
-                URL to your Organization's logo (optional).
+                Used in your Organization&apos;s URL. Generated automatically
+                from the name.
               </p>
             </div>
           </div>

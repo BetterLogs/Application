@@ -44,7 +44,7 @@ export default function Signup() {
           .max(50)
           .regex(/^[A-Za-z0-9]+$/),
         email: z.email(),
-        password: z.string().min(12).max(128),
+        password: z.string().min(8).max(128),
       }),
     },
   });

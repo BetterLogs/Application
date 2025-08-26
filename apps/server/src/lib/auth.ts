@@ -6,6 +6,7 @@ import { validator } from 'validation-better-auth';
 import { z } from 'zod';
 import { db } from '../db';
 import * as schema from '../db/schema/auth';
+import { CreateOrgSchema } from './validation/orgs';
 
 const SignupSchema = z.object({
   name: z
@@ -35,7 +36,13 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    validator([{ path: '/sign-up/email', schema: SignupSchema }]),
+    validator([
+      { path: '/sign-up/email', schema: SignupSchema },
+      {
+        path: 'organization/create',
+        schema: CreateOrgSchema,
+      },
+    ]),
     organization({
       organizationLimit: 1,
     }),
