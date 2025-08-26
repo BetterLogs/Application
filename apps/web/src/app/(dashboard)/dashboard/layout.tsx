@@ -25,7 +25,7 @@ export default async function DashboardLayout({
 
   if (response.ok) {
     const data = await response.json();
-    user = data.user;
+    user = data?.user ?? null;
   }
 
   if (!user) {

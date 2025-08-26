@@ -1,5 +1,4 @@
 import type { User } from 'better-auth';
-
 import {
   BoltIcon,
   BookOpenIcon,
@@ -8,7 +7,7 @@ import {
   PinIcon,
   UserPenIcon,
 } from 'lucide-react';
-
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,8 +19,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { authClient } from '@/lib/auth-client';
 
-export default function UserMenu({ user }: { user: User }) {
+export default function UserMenu({ user }: { user?: User | null }) {
+  const router = useRouter();
+
+  if (!user) {
+    return null;
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -31,7 +36,9 @@ export default function UserMenu({ user }: { user: User }) {
               alt="Profile image"
               src={user.image ? user.image : './avatar.jpg'}
             />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback>
+              {user.name ? user.name.charAt(0) : '?'}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -71,7 +78,17 @@ export default function UserMenu({ user }: { user: User }) {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={async () => {
+            await authClient.signOut({
+              fetchOptions: {
+                onSuccess: () => {
+                  router.push('/login');
+                },
+              },
+            });
+          }}
+        >
           <LogOutIcon aria-hidden="true" className="opacity-60" size={16} />
           <span>Logout</span>
         </DropdownMenuItem>

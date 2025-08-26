@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/style/noMagicNumbers: <Later> */
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { organization } from 'better-auth/plugins';
 import { validator } from 'validation-better-auth';
 import { z } from 'zod';
 import { db } from '../db';
@@ -33,5 +34,10 @@ export const auth = betterAuth({
       partitioned: true,
     },
   },
-  plugins: [validator([{ path: '/sign-up/email', schema: SignupSchema }])],
+  plugins: [
+    validator([{ path: '/sign-up/email', schema: SignupSchema }]),
+    organization({
+      organizationLimit: 1,
+    }),
+  ],
 });

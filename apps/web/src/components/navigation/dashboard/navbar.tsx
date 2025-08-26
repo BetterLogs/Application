@@ -30,7 +30,7 @@ const navigationLinks = [
   { href: '#', label: 'Team', icon: UsersIcon },
 ];
 
-export default function Component({ user }: { user: User }) {
+export default function Component({ user }: { user?: User | null }) {
   return (
     <header className="border-b px-4 md:px-6">
       <div className="flex h-16 items-center justify-between gap-4">
@@ -135,8 +135,14 @@ export default function Component({ user }: { user: User }) {
         <div className="flex items-center gap-2">
           {/* Theme toggle */}
           <ThemeToggle />
-          {/* User menu */}
-          <UserMenu user={user} />
+          {/* User menu or sign-in */}
+          {user ? (
+            <UserMenu user={user} />
+          ) : (
+            <a href="/login">
+              <Button variant="ghost">Sign in</Button>
+            </a>
+          )}
         </div>
       </div>
     </header>
